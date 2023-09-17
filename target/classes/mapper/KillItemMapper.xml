@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhuang.kill.mapper.KillItemMapper">
+
+    <resultMap id="killItemVO" type="com.zhuang.kill.entity.KillItemVO"/>
+    <resultMap id="killItemDetailVO" type="com.zhuang.kill.entity.KillItemDetailVO"/>
+    <resultMap id="killItem" type="com.zhuang.kill.entity.KillItem"/>
+
+    <select id="listKillItemVO" resultMap="killItemVO">
+        select temp.itemId     itemId,
+               temp.killId     killId,
+               item_info.item_name   itemName,
+               item_info.item_price  itemPrice,
+               temp.killPrice  killPrice,
+               temp.stockCount stockCount
+        from (select kill_item.item_id     itemId,
+                     kill_item.kill_id     killId,
+                     kill_item.kill_price  killPrice,
+                     kill_item.stock_count stockCount,
+                     kill_item.start_date  startDate
+              from kill_item
+              where kill_item.end_date > CURDATE()
+              order by kill_item.item_id) as temp left join item_info on item_info.item_id = temp.itemId;
+--         select temp1.itemId     itemId,
+--                temp1.killId     killId,
+--                temp1.itemName   itemName,
+--                temp1.itemPrice  itemPrice,
+--                temp1.killPrice  killPrice,
+--                temp1.stockCount stockCount
+--         from (select kill_item.item_id     itemId,
+--                      kill_item.kill_id     killId,
+--                      item_info.item_name   itemName,
+--                      item_info.item_price  itemPrice,
+--                      kill_item.kill_price  killPrice,
+--                      kill_item.stock_count stockCount,
+--                      kill_item.start_date  startDate
+--               from kill_item left join item_info on item_info.item_id = kill_item.item_id
+--               where kill_item.end_date > CURDATE()
+--              ) as temp1;
+    </select>
+
+    <select id="listKillItemDetailVO" resultMap="killItemDetailVO">
+        select temp.itemId     itemId,
+               temp.killId     killId,
+               item_info.item_name   itemName,
+               item_info.item_detail itemDetail,
+               item_info.item_price  itemPrice,
+               temp.killPrice  killPrice,
+               temp.stockCount stockCount,
+               temp.startDate startDate,
+               temp.endDate endDate
+        from (select kill_item.item_id     itemId,
+                     kill_item.kill_id     killId,
+                     kill_item.kill_price  killPrice,
+                     kill_item.stock_count stockCount,
+                     kill_item.start_date  startDate,
+                     kill_item.end_date endDate
+              from kill_item
+              where kill_item.end_date > CURDATE()
+              order by kill_item.item_id) as temp left join item_info on item_info.item_id = temp.itemId;
+    </select>
+
+    <select id="getKillItemDetailVOByKillId" parameterType="long" resultMap="killItemDetailVO">
+        select item_info.item_id itemId,
+               kill_item.kill_id killId,
+               item_info.item_name itemName,
+               item_info.item_detail itemDetail,
+               item_info.item_price itemPrice,
+               kill_item.kill_price killPrice,
+               kill_item.stock_count stockCount,
+               kill_item.start_date startDate,
+               kill_item.end_date endDate
+        from item_info left join kill_item on item_info.item_id = kill_item.item_id
+        where kill_item.kill_id = #{killId}
+    </select>
+
+    <select id="getKillItemByKillId" parameterType="long" resultMap="killItem">
+        select *
+        from item_info left join kill_item on item_info.item_id = kill_item.item_id
+        where kill_item.kill_id = #{killId}
+    </select>
+
+    <update id="decreaseStock" parameterType="map">
+        update kill_item set stock_count=stock_count-#{amount, jdbcType=INTEGER}
+        where kill_id=#{killId,jdbcType=BIGINT} and stock_count>0 and stock_count>=#{amount, jdbcType=INTEGER}
+    </update>
+
+</mapper>
